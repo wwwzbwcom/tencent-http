@@ -1,0 +1,96 @@
+{
+  "name": "@serverless/CHANGEME",
+  "version": "0.0.0",
+  "description": "CHANGEME",
+  "repository": "serverlessCHANGEME",
+  "homepage": "https://github.com/serverlessCHANGEME#readme",
+  "keywords": [
+    "CHANGEME"
+  ],
+  "author": "Serverless, Inc.",
+  "eslintConfig": {
+    "extends": "@serverless/eslint-config/node",
+    "root": true
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ],
+    "*.{css,html,js,json,md,yaml,yml}": [
+      "prettier -c"
+    ]
+  },
+  "standard-version": {
+    "skip": {
+      "commit": true,
+      "tag": true
+    }
+  },
+  "mocha": {
+    "reporter": "@serverless/test/setup/mocha-reporter",
+    "require": [
+      "@serverless/test/setup/log",
+      "@serverless/test/setup/async-leaks-detector",
+      "@serverless/test/setup/mock-homedir",
+      "@serverless/test/setup/restore-cwd",
+      "@serverless/test/setup/restore-env"
+    ]
+  },
+  "nyc": {
+    "all": true,
+    "exclude": [
+      ".github/**",
+      "coverage/**",
+      "test/**",
+      "commitlint.config.js",
+      "prettier.config.js"
+    ],
+    "reporter": [
+      "lcov",
+      "html",
+      "text-summary"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^9.1.2",
+    "@serverless/eslint-config": "^3.0.0",
+    "@serverless/test": "^4.8.0",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^7.8.1",
+    "eslint-plugin-import": "^2.22.0",
+    "git-list-updated": "^1.2.1",
+    "github-release-from-cc-changelog": "^2.2.0",
+    "husky": "^4.2.5",
+    "lint-staged": "^10.3.0",
+    "mocha": "^6.1.1",
+    "nyc": "^15.1.0",
+    "prettier": "^2.1.1",
+    "standard-version": "^9.0.0"
+  },
+  "scripts": {
+    "commitlint": "commitlint -f HEAD@{15}",
+    "coverage": "nyc npm test",
+    "lint": "eslint .",
+    "lint:updated": "pipe-git-updated --ext=js -- eslint",
+    "prepare-release": "standard-version && prettier --write CHANGELOG.md",
+    "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
+    "prettier-check:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml -- prettier -c",
+    "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,md,yaml,yml}\"",
+    "prettify:updated": "pipe-git-updated --ext=css --ext=html --ext=js --ext=json --ext=md --ext=yaml --ext=yml -- prettier --write",
+    "test": "mocha test/**/*.js",
+    "test:isolated": "mocha-isolated test/**/*.js"
+  },
+  "engines": {
+    "node": ">=10.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "MIT"
+}
