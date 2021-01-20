@@ -1,0 +1,11 @@
+# serverless.component.yml
+
+name: http
+version: 0.0.1
+author: wwwzbwcom
+org: tencent
+description: Deploys Serverless HTTP Service
+keywords: tencent, serverless, http
+repo: https://github.com/wwwzbwcom/tencent-http
+license: MIT
+main: ./build
