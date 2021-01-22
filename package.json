@@ -69,12 +69,15 @@
     "husky": "^4.2.5",
     "lint-staged": "^10.3.0",
     "mocha": "^6.1.1",
+    "ncp": "^2.0.0",
     "nyc": "^15.1.0",
     "prettier": "^2.1.1",
     "standard-version": "^9.0.0",
     "typescript": "^4.1.3"
   },
   "scripts": {
+    "build": "tsc -p . && ncp ./src/_shims/node_modules ./build/_shims/node_modules && ncp ./src/node_modules ./build/node_modules",
+    "publish": "npm run build && sls registry publish --dev",
     "commitlint": "commitlint -f HEAD@{15}",
     "coverage": "nyc npm test",
     "lint": "eslint .",

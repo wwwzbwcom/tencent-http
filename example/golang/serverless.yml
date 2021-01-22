@@ -1,0 +1,24 @@
+org: wwwzbwcom
+app: http-test
+stage: dev
+component: http@dev
+name: http-test
+
+inputs:
+  entryFile: ./main
+  src:
+    src: ./
+    exclude:
+      - .env
+  region: ap-guangzhou
+  runtime: Nodejs10.15
+  apigatewayConf:
+    protocols:
+      - http
+      - https
+    environment: release
+  functionConf:
+    timeout: 10
+    environment:
+      variables:
+        APP_PORT: 8080

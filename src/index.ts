@@ -15,7 +15,7 @@ import { getDefaultProtocol, deepClone, getCodeZipPath } from './utils';
 import { formatInputs } from './formatter';
 import CONFIGS from './config';
 
-class ServerlessComponent extends Component<State> {
+export class ServerlessComponent extends Component<State> {
   getCredentials() {
     const { tmpSecrets } = this.credentials.tencent;
 
@@ -228,7 +228,7 @@ class ServerlessComponent extends Component<State> {
         outputs.apigw = apigwOutputs[oneRegion];
       }
     } else {
-      outputs['scf'] = functionOutputs;
+      outputs.scf = functionOutputs;
       if (apigwOutputs) {
         outputs.apigw = apigwOutputs;
       }
@@ -359,5 +359,3 @@ class ServerlessComponent extends Component<State> {
     };
   }
 }
-
-module.exports = ServerlessComponent;
