@@ -1,23 +1,25 @@
 import * as url from 'url';
 
-export interface ApigwEvent {
-  httpMethod:
-    | 'get'
-    | 'post'
-    | 'put'
-    | 'patch'
-    | 'head'
-    | 'delete'
-    | 'GET'
-    | 'POST'
-    | 'PUT'
-    | 'PATCH'
-    | 'HEAD'
-    | 'DELETE'
-    | 'OPTIONS'
-    | 'TRACE'
-    | 'options'
-    | 'trace';
+type HttpMethod =
+  | 'get'
+  | 'post'
+  | 'put'
+  | 'patch'
+  | 'head'
+  | 'delete'
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'HEAD'
+  | 'DELETE'
+  | 'OPTIONS'
+  | 'TRACE'
+  | 'options'
+  | 'trace';
+
+export interface ApigwRequest {
+  httpMethod: HttpMethod;
   headers: Record<string, string>;
   body: string;
   isBase64Encoded: boolean;
@@ -25,7 +27,14 @@ export interface ApigwEvent {
   queryString: string;
 }
 
-function getEventBody(event: ApigwEvent) {
+export interface HttpRequest {
+  method: HttpMethod;
+  path: string;
+  body?: Buffer;
+  headers: Record<string, string>;
+}
+
+function getEventBody(event: ApigwRequest) {
   return Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8');
 }
 
@@ -33,11 +42,11 @@ function clone<T>(obj: T) {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function getPathWithQueryStringParams(event: ApigwEvent) {
+function getPathWithQueryStringParams(event: ApigwRequest) {
   return url.format({ pathname: event.path, query: event.queryString });
 }
 
-export function mapApiGatewayEventToHttpRequest(event: ApigwEvent) {
+export function event2http(event: ApigwRequest): HttpRequest {
   const headers = Object.assign({}, event.headers);
 
   // NOTE: API Gateway is not setting Content-Length header on requests even when they have a body

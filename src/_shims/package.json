@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "got": "^11.8.1"
+    "got": "^11.8.1",
+    "serialize-error": "^8.0.1"
   }
 }
