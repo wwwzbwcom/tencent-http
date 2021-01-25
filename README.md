@@ -28,12 +28,14 @@ $ npm install -g serverless
 
 ### 2. 创建
 
-通过如下命令和模板链接，快速创建一个 http 应用：
+<!-- 通过如下命令和模板链接，快速创建一个 http 应用：
 
 ```bash
 $ serverless init http-starter --name example
 $ cd example
-```
+``` -->
+
+本项目 serverless template 还未创建，可以进入 `./example` 文件中体验，有 Golang 和 Node.js 的两个 Hello World 项目作为示例。
 
 ### 3. 部署
 
