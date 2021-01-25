@@ -1,4 +1,4 @@
-[![Serverless Koa Tencent Cloud](https://img.serverlesscloud.cn/20191226/1577361724216-koajs_width.png)](http://serverless.com)
+[![Serverless HTTP Tencent Cloud](https://img.serverlesscloud.cn/20191226/1577361724216-http_width.png)](http://serverless.com)
 
 # 腾讯云 HTTP 组件
 
@@ -7,6 +7,8 @@
 ## 简介
 
 使用腾讯云 HTTP 组件，可在不修改，不侵入用户代码的情况下，快速的在腾讯云创建，配置和管理一个任意一个语言，框架编写的 HTTP 服务。
+
+组件启动后，会执行入口文件，启动 HTTP 服务。并将 API 网关的请求转发到 `APP_PORT` 环境变量的端口（未配置情况下为 `18888` 端口）。该组建用户只需按正常方式编写应用逻辑，并为组件设置应用入口（或在入口文件处启动应用），即可完成应用的 `serverless` 化改造。
 
 ## 目录
 
@@ -49,9 +51,11 @@ serverless deploy
 
 ### 4. 配置
 
-koa 组件支持 0 配置部署，也就是可以直接通过配置文件中的默认值进行部署。但你依然可以修改更多可选配置来进一步开发该 koa 项目。
+HTTP 组件支持 0 配置部署，也就是可以直接通过配置文件中的默认值进行部署。但你依然可以修改更多可选配置来进一步开发该 HTTP 项目。
 
-以下是 koa 组件的 `serverless.yml`配置示例：
+默认情况下，组件的入口文件是 `sls.js`，监听端口是 `18888`。也就是说，服务部署后会启动 `sls.js` 的文件，并将请求转发到 `18888` 端口，用户在入口文件中启动 HTTP 服务器，并监听响应端口，即可处理请求。
+
+以下是 HTTP 组件的 `serverless.yml`配置示例：
 
 ```yml
 # serverless.yml
