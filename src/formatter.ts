@@ -65,6 +65,7 @@ export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {} as
     functionConfOneRegion.environment = tempFunctionConf.environment;
     functionConfOneRegion.environment.variables = functionConfOneRegion.environment.variables || {};
     functionConfOneRegion.environment.variables.SERVERLESS = '1';
+    functionConfOneRegion.environment.variables.SLS_PORT = inputs.port ?? CONFIGS.defaultPort;
     functionConfOneRegion.environment.variables.SLS_ENTRY_FILE =
       inputs.entryFile || CONFIGS.defaultEntryFile;
   } else {

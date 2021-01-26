@@ -5,6 +5,7 @@ export interface ApigwResponse {
   statusCode: number;
   headers: Record<string, string>;
   isBase64Encoded: boolean;
+  rawBody?: any;
 }
 
 export function http2event<T extends Buffer | string>(httpRes: Response<T>): ApigwResponse {
@@ -32,6 +33,7 @@ export function http2event<T extends Buffer | string>(httpRes: Response<T>): Api
     return {
       statusCode: httpRes.statusCode,
       body: httpRes.body.toString('base64'),
+      rawBody: httpRes.body.toString('utf-8'),
       headers: httpRes.headers as Record<string, string>,
       isBase64Encoded: true,
     };

@@ -37,7 +37,7 @@ async function init() {
       }
     }
 
-    port = process.env.APP_PORT ?? '18888';
+    port = process.env.SLS_PORT ?? '18888';
 
     hasInit = true;
   }

@@ -8,7 +8,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", handler)
-	port := os.Getenv("APP_PORT")
+	port := os.Getenv("SLS_PORT")
 	if port == "" {
 		port = "18888"
 	}

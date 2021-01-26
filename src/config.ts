@@ -4,6 +4,7 @@ const CONFIGS = {
     name: 'http',
     fullname: 'HTTP',
   },
+  defaultPort: '18888',
   defaultEntryFile: 'sls.js',
   handler: 'sl_handler.handler',
   runtime: 'Nodejs10.15',

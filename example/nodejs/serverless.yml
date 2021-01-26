@@ -6,6 +6,7 @@ name: http-test
 
 inputs:
   entryFile: index.js
+  port: 8080
   src:
     src: ./
     exclude:
@@ -19,6 +20,3 @@ inputs:
     environment: release
   functionConf:
     timeout: 10
-    environment:
-      variables:
-        APP_PORT: 8080

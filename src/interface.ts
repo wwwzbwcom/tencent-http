@@ -122,6 +122,7 @@ export type DeployInputs = DeployInputsOneRegion & Record<string, DeployInputsOn
 
 export interface DeployInputsOneRegion {
   entryFile: string;
+  port: string;
 
   serviceId?: string;
   functionConf?: DeployScfInputsOneRegion;

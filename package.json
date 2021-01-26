@@ -1,7 +1,7 @@
 {
   "name": "@serverless/http",
   "version": "0.0.0",
-  "description": "CHANGEME",
+  "description": "HTTP Component for tencent serverless",
   "repository": "serverlessCHANGEME",
   "homepage": "https://github.com/serverlessCHANGEME#readme",
   "keywords": [
