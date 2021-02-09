@@ -13,7 +13,6 @@ inputs:
       - .env
   region: ap-guangzhou
   runtime: Nodejs12.16
-  functionName: http-test_scf
   apigatewayConf:
     protocols:
       - http

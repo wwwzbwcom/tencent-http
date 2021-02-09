@@ -77,7 +77,8 @@
   },
   "scripts": {
     "build": "tsc -p . && ncp ./src/_shims/node_modules ./build/_shims/node_modules && ncp ./src/node_modules ./build/node_modules",
-    "publish": "npm run build && sls registry publish --dev",
+    "publish:dev": "npm run build && sls registry publish --dev",
+    "publish": "npm run build && sls registry publish",
     "commitlint": "commitlint -f HEAD@{15}",
     "coverage": "nyc npm test",
     "lint": "eslint .",

@@ -15,7 +15,7 @@ async function init() {
   const entryFile = SLS_ENTRY_FILE ? path.join(__dirname, '..', SLS_ENTRY_FILE) : './sls.js';
 
   /** Start HTTP Server in Entry File */
-  console.log(`entryFile: ${entryFile}`);
+  console.log(`EntryFile: ${entryFile}`);
   /** Only create server once */
   if (!hasInit) {
     if (entryFile.endsWith('.js')) {
@@ -60,7 +60,7 @@ exports.handler = async (event: ApigwRequest): Promise<ApigwResponse> => {
 
     return http2event(httpRes);
   } catch (err) {
-    console.log(err);
+    console.warn(err);
     return {
       statusCode: 502,
       body: serializeError(err),

@@ -139,8 +139,6 @@ export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {}) =
     }
     if (curRegionConf && curRegionConf.apigatewayConf) {
       apigatewayConf[curRegion] = curRegionConf.apigatewayConf;
-      const regionState = state[curRegion];
-      apigatewayConf[curRegion].serviceId = regionState.serviceId;
     }
   });
 

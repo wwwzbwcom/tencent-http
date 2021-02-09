@@ -143,14 +143,15 @@ export class ServerlessComponent extends Component<State> {
       const apigwDeployer = async () => {
         const apigw = new Apigw(credentials, curRegion);
 
-        const oldState = this.state[curRegion] ?? {};
+        const regionState = this.state[curRegion] ?? {};
+
         const apigwInputs = {
           ...inputs,
-          serviceId: inputs.serviceId!,
+          serviceId: regionState.serviceId ?? inputs.serviceId!,
           region: curRegion,
           oldState: {
-            apiList: oldState.apiList || [],
-            customDomains: oldState.customDomains || [],
+            apiList: regionState.apiList || [],
+            customDomains: regionState.customDomains || [],
           },
         };
         const apigwOutput = await apigw.deploy(deepClone(apigwInputs) as any);
