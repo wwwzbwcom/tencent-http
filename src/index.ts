@@ -1,6 +1,7 @@
+import { CapiCredentials, RegionType } from 'tencent-component-toolkit/lib/modules/interface';
 import { Component } from '@serverless/core';
 import { Scf, Apigw, Cns, Cos } from 'tencent-component-toolkit';
-import { TypeError } from 'tencent-component-toolkit/src/utils/error';
+import { ApiTypeError } from 'tencent-component-toolkit/src/utils/error';
 import * as path from 'path';
 import {
   DeployInputs,
@@ -16,11 +17,11 @@ import { formatInputs } from './formatter';
 import CONFIGS from './config';
 
 export class ServerlessComponent extends Component<State> {
-  getCredentials() {
+  getCredentials(): CapiCredentials {
     const { tmpSecrets } = this.credentials.tencent;
 
     if (!tmpSecrets || !tmpSecrets.TmpSecretId) {
-      throw new TypeError(
+      throw new ApiTypeError(
         'CREDENTIAL',
         'Cannot get secretId/Key, your account could be sub-account and does not have the access to use SLS_QcsRole, please make sure the role exists first, then visit https://cloud.tencent.com/document/product/1154/43006, follow the instructions to bind the role to your account.'
       );
@@ -38,14 +39,13 @@ export class ServerlessComponent extends Component<State> {
   }
 
   async deployFunctionOneRegion(
-    credentials: {},
     inputs: DeployScfInputsOneRegion = {},
-    curRegion: string
+    curRegion: RegionType
   ) {
+    const credentials = this.getCredentials();
     const outputs: DeployScfOutputs = {};
-    const appId = this.getAppId();
 
-    const code = await this.uploadCodeToCos(appId, credentials, inputs, curRegion);
+    const code = await this.uploadCodeToCos(inputs, curRegion);
     const scf = new Scf(credentials, curRegion);
     const tempInputs = {
       ...inputs,
@@ -59,8 +59,8 @@ export class ServerlessComponent extends Component<State> {
     };
 
     this.state[curRegion] = {
-      ...this.state.curRegion,
-      ...outputs.curRegion,
+      ...this.state[curRegion],
+      ...outputs[curRegion],
     };
 
     // default version is $LATEST
@@ -81,14 +81,13 @@ export class ServerlessComponent extends Component<State> {
   }
 
   async deployFunctionRegionList(
-    credentials: {},
     inputs: DeployScfInputsOneRegion,
     regionList: string[]
   ) {
     const outputs: DeployScfOutputs = {};
     for (let i = 0; i < regionList.length; i++) {
       const curRegion = regionList[i];
-      const regionOutputs = await this.deployFunctionOneRegion(credentials, inputs, curRegion);
+      const regionOutputs = await this.deployFunctionOneRegion(inputs, curRegion);
       Object.assign(outputs, regionOutputs);
     }
     this.save();
@@ -97,10 +96,10 @@ export class ServerlessComponent extends Component<State> {
 
   // try to add dns record
   async tryToAddDnsRecord(
-    credentials: {},
     customDomains: { domainPrefix: string; subDomain: string; cname: string }[]
   ) {
     try {
+      const credentials = this.getCredentials();
       const cns = new Cns(credentials);
       for (let i = 0; i < customDomains.length; i++) {
         const item = customDomains[i];
@@ -122,22 +121,23 @@ export class ServerlessComponent extends Component<State> {
         }
       }
     } catch (e) {
-      console.log('METHOD_tryToAddDnsRecord', e.message);
+      console.warn('METHOD_tryToAddDnsRecord', e.message);
     }
   }
 
   async deployApigateway(
-    credentials: {},
     inputs: DeployApigwInputsOneRegion,
     regionList: string[]
   ): Promise<DeployApigwOutputs> {
+    const credentials = this.getCredentials();
     if (inputs.isDisabled) {
       return {};
     }
 
-    const getServiceId = (instance: ServerlessComponent, region: string) => {
-      const regionState = instance.state[region];
-      return inputs.serviceId ?? (regionState && regionState.serviceId);
+    const getServiceId = (region: string) => {
+      console.log({ region, state: this.state });
+      const regionState = this.state[region];
+      return inputs.serviceId ?? regionState.serviceId;
     };
 
     const deployTasks: {}[] = [];
@@ -156,7 +156,7 @@ export class ServerlessComponent extends Component<State> {
           },
         };
         // different region deployment has different service id
-        apigwInputs.serviceId = getServiceId(this, curRegion);
+        apigwInputs.serviceId = getServiceId(curRegion);
         const apigwOutput = await apigw.deploy(deepClone(apigwInputs));
 
         outputs[curRegion] = {
@@ -170,9 +170,9 @@ export class ServerlessComponent extends Component<State> {
 
         if (apigwOutput.customDomains) {
           // TODO: need confirm add cns authentication
-          if (inputs.autoAddDnsRecord === true) {
-            // await this.tryToAddDnsRecord(credentials, apigwOutput.customDomains)
-          }
+          // if (inputs.autoAddDnsRecord === true) {
+          //   await this.tryToAddDnsRecord(credentials, {})
+          // }
           outputs[curRegion].customDomains = apigwOutput.customDomains;
         }
         this.state[curRegion] = {
@@ -194,8 +194,6 @@ export class ServerlessComponent extends Component<State> {
   async deploy(inputs: DeployInputs) {
     console.log(`Deploying ${CONFIGS.component.fullname} App...`);
 
-    const credentials = this.getCredentials();
-
     // 对Inputs内容进行标准化
     const { regionList, functionConf, apigatewayConf } = await formatInputs(this.state, inputs);
 
@@ -207,14 +205,13 @@ export class ServerlessComponent extends Component<State> {
 
     let apigwOutputs;
     const functionOutputs = await this.deployFunctionRegionList(
-      credentials,
       functionConf,
       regionList
     );
 
     // support apigatewayConf.isDisabled
     if (apigatewayConf?.isDisabled !== true) {
-      apigwOutputs = await this.deployApigateway(credentials, apigatewayConf, regionList);
+      apigwOutputs = await this.deployApigateway(apigatewayConf, regionList);
     } else {
       this.state.apigwDisabled = true;
     }
@@ -279,7 +276,7 @@ export class ServerlessComponent extends Component<State> {
     if (this.state.cns) {
       const cns = new Cns(credentials);
       for (let i = 0; i < this.state.cns.length; i++) {
-        await cns.remove({ deleteList: this.state.cns[i].records });
+        await cns.remove({ records: this.state.cns[i].records });
       }
     }
 
@@ -287,14 +284,14 @@ export class ServerlessComponent extends Component<State> {
   }
 
   async uploadCodeToCos(
-    appId: string,
-    credentials: {},
     inputs: DeployScfInputsOneRegion,
     region: string
   ) {
     const state: {
       zipPath?: string;
     } = {};
+
+    const appId = this.getAppId();
     const bucketName = inputs?.code?.bucket ?? `sls-cloudfunction-${region}-code`;
     const objectName =
       inputs?.code?.object ?? `${inputs.name}-${Math.floor(Date.now() / 1000)}.zip`;
@@ -306,6 +303,7 @@ export class ServerlessComponent extends Component<State> {
       // save the zip path to state for lambda to use it
       state.zipPath = zipPath;
 
+      const credentials = this.getCredentials();
       const cos = new Cos(credentials, region);
 
       if (!inputs?.code?.bucket) {
@@ -317,7 +315,6 @@ export class ServerlessComponent extends Component<State> {
             {
               status: 'Enabled',
               id: 'deleteObject',
-              filter: '',
               expiration: { days: '10' },
               abortIncompleteMultipartUpload: { daysAfterInitiation: '10' },
             },

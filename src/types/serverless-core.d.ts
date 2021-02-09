@@ -16,7 +16,12 @@ declare module '@serverless/core' {
 
     codeInjected: boolean;
 
-    uploadSourceZipToCOS(zipPath: string, uploadUrl: string, optionsA: {}, optionsB: {});
+    uploadSourceZipToCOS(
+      zipPath: string,
+      uploadUrl: string,
+      slsSDKEntries: {},
+      options: { _shims?: string }
+    );
     getSDKEntries(entry: string): {};
   }
 }

@@ -1,3 +1,5 @@
+import { CnsRecordInputs } from 'tencent-component-toolkit/lib/modules/cns/interface';
+import { ApigwBindCustomDomainOutputs, ApiEndpoint } from 'tencent-component-toolkit/lib/modules/apigw/interface';
 export type DeployScfInputs = DeployScfInputsOneRegion & Record<string, DeployScfInputsOneRegion>;
 
 export interface DeployScfInputsOneRegion {
@@ -111,10 +113,10 @@ export type DeployApigwOutputs = {
   string,
   {
     serviceId: string;
-    subDomain: string;
+    subDomain: string | string[];
     environment: 'prepub' | 'test' | 'release';
     url: string;
-    customDomains?: string[];
+    customDomains?: ApigwBindCustomDomainOutputs[];
   }
 >;
 
@@ -172,7 +174,7 @@ export type State = {
   traffic?: number;
   apigwDisabled?: boolean;
   cns?: {
-    records: string[];
+    records: CnsRecordInputs[];
   }[];
   bucket?: string;
   object?: string;
@@ -187,6 +189,6 @@ export interface StateOneRegion {
   created: boolean;
   serviceId: string;
 
-  apiList: DeployApigwOutputs[];
-  customDomains: string[];
+  apiList: ApiEndpoint[];
+  customDomains: ApigwBindCustomDomainOutputs[];
 }

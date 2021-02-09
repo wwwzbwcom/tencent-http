@@ -14,7 +14,7 @@ import {
   getDefaultServiceDescription,
 } from './utils';
 
-export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {} as any) => {
+export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {}) => {
   // 对function inputs进行标准化
   const tempFunctionConf: DeployScfInputsOneRegion =
     inputs.functionConf ?? inputs.functionConfig ?? ({} as any);
@@ -24,7 +24,9 @@ export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {} as
   ];
 
   // chenck state function name
-  const stateFunctionName = state[regionList[0]] && state[regionList[0]].functionName;
+  const stateFunctionName = state[regionList[0]]?.functionName;
+
+  console.log({ state });
 
   const functionConfOneRegion: DeployScfInputsOneRegion = Object.assign(tempFunctionConf, {
     code: {
