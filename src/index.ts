@@ -15,7 +15,17 @@ import {
 import { getDefaultProtocol, deepClone, getCodeZipPath } from './utils';
 import { formatInputs } from './formatter';
 import CONFIGS from './config';
+import * as winston from 'winston';
 
+const logger = winston.createLogger({
+  level: 'debug',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    }),
+  ],
+});
 export class ServerlessComponent extends Component<State> {
   getCredentials(): CapiCredentials {
     const { tmpSecrets } = this.credentials.tencent;
@@ -38,10 +48,7 @@ export class ServerlessComponent extends Component<State> {
     return this.credentials.tencent.tmpSecrets.appId;
   }
 
-  async deployFunctionOneRegion(
-    inputs: DeployScfInputsOneRegion = {},
-    curRegion: RegionType
-  ) {
+  async deployFunctionOneRegion(inputs: DeployScfInputsOneRegion = {}, curRegion: RegionType) {
     const credentials = this.getCredentials();
     const outputs: DeployScfOutputs = {};
 
@@ -51,7 +58,7 @@ export class ServerlessComponent extends Component<State> {
       ...inputs,
       code,
     };
-    const scfOutput = await scf.deploy(deepClone(tempInputs));
+    const scfOutput = await scf.deploy(deepClone(tempInputs) as any);
     outputs[curRegion] = {
       functionName: scfOutput.FunctionName,
       runtime: scfOutput.Runtime,
@@ -80,10 +87,7 @@ export class ServerlessComponent extends Component<State> {
     return outputs;
   }
 
-  async deployFunctionRegionList(
-    inputs: DeployScfInputsOneRegion,
-    regionList: string[]
-  ) {
+  async deployFunctionRegionList(inputs: DeployScfInputsOneRegion, regionList: string[]) {
     const outputs: DeployScfOutputs = {};
     for (let i = 0; i < regionList.length; i++) {
       const curRegion = regionList[i];
@@ -95,9 +99,7 @@ export class ServerlessComponent extends Component<State> {
   }
 
   // try to add dns record
-  async tryToAddDnsRecord(
-    customDomains: { domainPrefix: string; subDomain: string; cname: string }[]
-  ) {
+  async addDnsRecord(customDomains: { domainPrefix: string; subDomain: string; cname: string }[]) {
     try {
       const credentials = this.getCredentials();
       const cns = new Cns(credentials);
@@ -121,42 +123,37 @@ export class ServerlessComponent extends Component<State> {
         }
       }
     } catch (e) {
-      console.warn('METHOD_tryToAddDnsRecord', e.message);
+      logger.warning('[AddDnsRecord] Failed: ', e.message);
     }
   }
 
   async deployApigateway(
     inputs: DeployApigwInputsOneRegion,
-    regionList: string[]
+    regionList: RegionType[]
   ): Promise<DeployApigwOutputs> {
     const credentials = this.getCredentials();
     if (inputs.isDisabled) {
       return {};
     }
 
-    const getServiceId = (region: string) => {
-      const regionState = this.state[region];
-      return inputs.serviceId ?? regionState.serviceId;
-    };
-
     const deployTasks: {}[] = [];
     const outputs: DeployApigwOutputs = {};
 
-    regionList.forEach((curRegion) => {
+    for (const curRegion of regionList) {
       const apigwDeployer = async () => {
         const apigw = new Apigw(credentials, curRegion);
 
         const oldState = this.state[curRegion] ?? {};
         const apigwInputs = {
           ...inputs,
+          serviceId: inputs.serviceId!,
+          region: curRegion,
           oldState: {
             apiList: oldState.apiList || [],
             customDomains: oldState.customDomains || [],
           },
         };
-        // different region deployment has different service id
-        apigwInputs.serviceId = getServiceId(curRegion);
-        const apigwOutput = await apigw.deploy(deepClone(apigwInputs));
+        const apigwOutput = await apigw.deploy(deepClone(apigwInputs) as any);
 
         outputs[curRegion] = {
           serviceId: apigwOutput.serviceId,
@@ -182,7 +179,7 @@ export class ServerlessComponent extends Component<State> {
         };
       };
       deployTasks.push(apigwDeployer());
-    });
+    }
 
     await Promise.all(deployTasks);
 
@@ -191,7 +188,7 @@ export class ServerlessComponent extends Component<State> {
   }
 
   async deploy(inputs: DeployInputs) {
-    console.log(`Deploying ${CONFIGS.component.fullname} App...`);
+    logger.info(`Deploying ${CONFIGS.component.fullname} App...`);
 
     // 对Inputs内容进行标准化
     const { regionList, functionConf, apigatewayConf } = await formatInputs(this.state, inputs);
@@ -203,10 +200,7 @@ export class ServerlessComponent extends Component<State> {
     }
 
     let apigwOutputs;
-    const functionOutputs = await this.deployFunctionRegionList(
-      functionConf,
-      regionList
-    );
+    const functionOutputs = await this.deployFunctionRegionList(functionConf, regionList);
 
     // support apigatewayConf.isDisabled
     if (apigatewayConf?.isDisabled !== true) {
@@ -237,23 +231,92 @@ export class ServerlessComponent extends Component<State> {
     return outputs;
   }
 
-  async remove() {
-    console.log(`Removing ${CONFIGS.component.fullname} App...`);
+  async uploadCodeToCos(inputs: DeployScfInputsOneRegion, region: string) {
+    const state: {
+      zipPath?: string;
+    } = {};
 
-    const { state } = this;
-    const { regionList = [] } = state;
+    const appId = this.getAppId();
+    const bucketName = inputs?.code?.bucket ?? `sls-cloudfunction-${region}-code`;
+    const objectName =
+      inputs?.code?.object ?? `${inputs.name}-${Math.floor(Date.now() / 1000)}.zip`;
+    // if set bucket and object not pack code
+    if (!inputs?.code?.bucket || !inputs.code.object) {
+      const zipPath = await getCodeZipPath(inputs);
+      logger.info(`Code zip path ${zipPath}`);
+
+      // save the zip path to state for lambda to use it
+      state.zipPath = zipPath;
+
+      const credentials = this.getCredentials();
+      const cos = new Cos(credentials, region);
+
+      if (!inputs?.code?.bucket) {
+        // create default bucket
+        await cos.deploy({
+          bucket: bucketName + '-' + appId,
+          force: true,
+          lifecycle: [
+            {
+              status: 'Enabled',
+              id: 'deleteObject',
+              expiration: { days: '10' },
+              abortIncompleteMultipartUpload: { daysAfterInitiation: '10' },
+            },
+          ],
+        });
+      }
+
+      // upload code to cos
+      if (!inputs?.code?.object) {
+        logger.info(`Getting cos upload url for bucket ${bucketName}`);
+        const uploadUrl = await cos.getObjectUrl({
+          bucket: bucketName + '-' + appId,
+          object: objectName,
+          method: 'PUT',
+        });
+
+        // if shims and sls sdk entries had been injected to zipPath, no need to injected again
+        logger.info(`Uploading code to bucket ${bucketName}`);
+        if (this.codeInjected === true) {
+          await this.uploadSourceZipToCOS(zipPath, uploadUrl, {}, {});
+        } else {
+          const slsSDKEntries = this.getSDKEntries('_shims/handler.handler');
+          await this.uploadSourceZipToCOS(zipPath, uploadUrl, slsSDKEntries, {
+            _shims: path.join(__dirname, '_shims'),
+          });
+          this.codeInjected = true;
+        }
+        logger.info(`Upload ${objectName} to bucket ${bucketName} success`);
+      }
+    }
+
+    // save bucket state
+    this.state.bucket = bucketName;
+    this.state.object = objectName;
+
+    return {
+      bucket: bucketName,
+      object: objectName,
+    };
+  }
+
+  async remove() {
+    logger.info(`Removing ${CONFIGS.component.fullname} App...`);
+
+    const regionList = this.state.regionList ?? [];
 
     const credentials = this.getCredentials();
 
     const removeHandlers = [];
     for (let i = 0; i < regionList.length; i++) {
       const curRegion = regionList[i];
-      const curState = state[curRegion];
+      const curState = this.state[curRegion];
       const scf = new Scf(credentials, curRegion);
       const apigw = new Apigw(credentials, curRegion);
       const handler = async () => {
         // if disable apigw, no need to remove
-        if (state.apigwDisabled !== true) {
+        if (this.state.apigwDisabled !== true) {
           await apigw.remove({
             created: curState.created,
             environment: curState.environment,
@@ -280,78 +343,5 @@ export class ServerlessComponent extends Component<State> {
     }
 
     this.state = {};
-  }
-
-  async uploadCodeToCos(
-    inputs: DeployScfInputsOneRegion,
-    region: string
-  ) {
-    const state: {
-      zipPath?: string;
-    } = {};
-
-    const appId = this.getAppId();
-    const bucketName = inputs?.code?.bucket ?? `sls-cloudfunction-${region}-code`;
-    const objectName =
-      inputs?.code?.object ?? `${inputs.name}-${Math.floor(Date.now() / 1000)}.zip`;
-    // if set bucket and object not pack code
-    if (!inputs?.code?.bucket || !inputs.code.object) {
-      const zipPath = await getCodeZipPath(inputs);
-      console.log(`Code zip path ${zipPath}`);
-
-      // save the zip path to state for lambda to use it
-      state.zipPath = zipPath;
-
-      const credentials = this.getCredentials();
-      const cos = new Cos(credentials, region);
-
-      if (!inputs?.code?.bucket) {
-        // create default bucket
-        await cos.deploy({
-          bucket: bucketName + '-' + appId,
-          force: true,
-          lifecycle: [
-            {
-              status: 'Enabled',
-              id: 'deleteObject',
-              expiration: { days: '10' },
-              abortIncompleteMultipartUpload: { daysAfterInitiation: '10' },
-            },
-          ],
-        });
-      }
-
-      // upload code to cos
-      if (!inputs?.code?.object) {
-        console.log(`Getting cos upload url for bucket ${bucketName}`);
-        const uploadUrl = await cos.getObjectUrl({
-          bucket: bucketName + '-' + appId,
-          object: objectName,
-          method: 'PUT',
-        });
-
-        // if shims and sls sdk entries had been injected to zipPath, no need to injected again
-        console.log(`Uploading code to bucket ${bucketName}`);
-        if (this.codeInjected === true) {
-          await this.uploadSourceZipToCOS(zipPath, uploadUrl, {}, {});
-        } else {
-          const slsSDKEntries = this.getSDKEntries('_shims/handler.handler');
-          await this.uploadSourceZipToCOS(zipPath, uploadUrl, slsSDKEntries, {
-            _shims: path.join(__dirname, '_shims'),
-          });
-          this.codeInjected = true;
-        }
-        console.log(`Upload ${objectName} to bucket ${bucketName} success`);
-      }
-    }
-
-    // save bucket state
-    this.state.bucket = bucketName;
-    this.state.object = objectName;
-
-    return {
-      bucket: bucketName,
-      object: objectName,
-    };
   }
 }

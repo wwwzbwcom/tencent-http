@@ -1,7 +1,9 @@
 {
   "dependencies": {
+    "@types/download": "^6.2.4",
     "download": "^8.0.0",
     "tencent-component-toolkit": "^2.0.10",
-    "type": "^2.1.0"
+    "type": "^2.1.0",
+    "winston": "^3.3.3"
   }
 }

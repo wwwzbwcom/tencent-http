@@ -97,5 +97,7 @@
     "access": "public"
   },
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "winston": "^3.3.3"
+  }
 }

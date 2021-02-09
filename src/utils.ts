@@ -1,6 +1,4 @@
-import { DeployScfInputs, DeployScfInputsOneRegion } from './interface';
-import * as path from 'path';
-import { Cos } from 'tencent-component-toolkit';
+import { DeployScfInputsOneRegion } from './interface';
 import * as download from 'download';
 import { TypeError } from 'tencent-component-toolkit/src/utils/error';
 import CONFIGS from './config';
@@ -10,7 +8,7 @@ import CONFIGS from './config';
  */
 export const generateId = () => Math.random().toString(36).substring(6);
 
-export function deepClone<T>(obj: T) {
+export function deepClone<T>(obj: T):T {
   return JSON.parse(JSON.stringify(obj));
 }
 
