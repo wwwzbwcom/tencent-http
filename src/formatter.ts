@@ -26,8 +26,6 @@ export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {}) =
   // chenck state function name
   const stateFunctionName = state[regionList[0]]?.functionName;
 
-  console.log({ state });
-
   const functionConfOneRegion: DeployScfInputsOneRegion = Object.assign(tempFunctionConf, {
     code: {
       src: inputs.src,

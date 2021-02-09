@@ -135,7 +135,6 @@ export class ServerlessComponent extends Component<State> {
     }
 
     const getServiceId = (region: string) => {
-      console.log({ region, state: this.state });
       const regionState = this.state[region];
       return inputs.serviceId ?? regionState.serviceId;
     };
