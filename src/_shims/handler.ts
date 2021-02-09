@@ -37,6 +37,8 @@ async function init() {
       }
     }
 
+    console.log(port);
+
     port = process.env.SLS_PORT ?? '18888';
 
     hasInit = true;

@@ -61,21 +61,12 @@ export const formatInputs = (state: State, inputs: Partial<DeployInputs> = {}) =
   functionConfOneRegion.needSetTraffic =
     inputs.traffic !== undefined && functionConfOneRegion.lastVersion;
 
-  if (tempFunctionConf.environment) {
-    functionConfOneRegion.environment = tempFunctionConf.environment;
-    functionConfOneRegion.environment.variables = functionConfOneRegion.environment.variables || {};
-    functionConfOneRegion.environment.variables.SERVERLESS = '1';
-    functionConfOneRegion.environment.variables.SLS_PORT = inputs.port ?? CONFIGS.defaultPort;
-    functionConfOneRegion.environment.variables.SLS_ENTRY_FILE =
-      inputs.entryFile || CONFIGS.defaultEntryFile;
-  } else {
-    functionConfOneRegion.environment = {
-      variables: {
-        SERVERLESS: '1',
-        SLS_ENTRY_FILE: inputs.entryFile || CONFIGS.defaultEntryFile,
-      },
-    };
-  }
+  functionConfOneRegion.environment = tempFunctionConf.environment ?? {};
+  functionConfOneRegion.environment.variables = functionConfOneRegion.environment.variables || {};
+  functionConfOneRegion.environment.variables.SERVERLESS = '1';
+  functionConfOneRegion.environment.variables.SLS_PORT = inputs.port ?? CONFIGS.defaultPort;
+  functionConfOneRegion.environment.variables.SLS_ENTRY_FILE =
+    inputs.entryFile || CONFIGS.defaultEntryFile;
 
   if (tempFunctionConf.vpcConfig) {
     functionConfOneRegion.vpcConfig = tempFunctionConf.vpcConfig;

@@ -1,7 +1,7 @@
 'use strict';
 const http = require('http');
 
-const PORT = process.env.SLS_PORT ? process.env.SLS_PORT : 18888;
+const PORT = process.env.SLS_PORT;
 
 http
   .createServer((request, response) => {
