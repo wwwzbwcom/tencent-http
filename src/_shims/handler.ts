@@ -58,6 +58,7 @@ exports.handler = async (event: ApigwRequest): Promise<ApigwResponse> => {
       path: httpReq.path,
       throwHttpErrors: false,
       responseType: 'buffer',
+      decompress: false,
     });
 
     return http2event(httpRes);
