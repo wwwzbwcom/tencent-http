@@ -99,6 +99,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "try2be": "^1.1.4",
     "winston": "^3.3.3"
   }
 }

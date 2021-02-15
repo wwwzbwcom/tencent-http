@@ -4,6 +4,7 @@ import got from 'got';
 import * as childProcess from 'child_process';
 import { ApigwRequest, event2http } from './event2http';
 import { serializeError } from 'serialize-error';
+import { try2Arr, try2Obj } from 'try2be';
 
 let hasInit = false;
 let port: string;
@@ -24,12 +25,8 @@ async function init() {
       console.log('Using binary entry');
 
       const p = childProcess.spawn(entryFile);
-      p.stdout.on('data', (chunk) => {
-        console.log(chunk.toString('utf-8'));
-      });
-      p.stderr.on('data', (chunk) => {
-        console.error(chunk.toString('utf-8'));
-      });
+      p.stdout.pipe(process.stdout);
+      p.stderr.pipe(process.stderr);
 
       const delay = process.env.APP_INIT_DELAY;
       if (delay) {
@@ -37,20 +34,17 @@ async function init() {
       }
     }
 
-    console.log(port);
-
     port = process.env.SLS_PORT ?? '18888';
+    console.log(port);
 
     hasInit = true;
   }
 }
 
 exports.handler = async (event: ApigwRequest): Promise<ApigwResponse> => {
-  init();
-
-  const httpReq = event2http(event);
-
-  try {
+  const { ret, err } = await try2Obj(async () => {
+    init();
+    const httpReq = event2http(event);
     const httpRes = await got(`http://localhost:${port}`, {
       headers: httpReq.headers,
       method: httpReq.method,
@@ -62,7 +56,9 @@ exports.handler = async (event: ApigwRequest): Promise<ApigwResponse> => {
     });
 
     return http2event(httpRes);
-  } catch (err) {
+  });
+
+  if (err) {
     console.warn(err);
     return {
       statusCode: 502,
@@ -71,4 +67,6 @@ exports.handler = async (event: ApigwRequest): Promise<ApigwResponse> => {
       isBase64Encoded: false,
     };
   }
+
+  return ret!;
 };
