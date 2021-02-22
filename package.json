@@ -77,10 +77,10 @@
   },
   "scripts": {
     "build": "tsc -p . && ncp ./src/_shims/node_modules ./build/_shims/node_modules && ncp ./src/node_modules ./build/node_modules",
-    "publish:dev": "npm run build && sls registry publish --dev",
-    "publish": "npm run build && sls registry publish",
+    "publish:dev": "npm run build && sls registry publish --dev --debug",
     "commitlint": "commitlint -f HEAD@{15}",
     "coverage": "nyc npm test",
+    "publish": "npm run build && sls registry publish --debug",
     "lint": "eslint .",
     "lint:updated": "pipe-git-updated --ext=js -- eslint",
     "prepare-release": "standard-version && prettier --write CHANGELOG.md",

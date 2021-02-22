@@ -1,7 +1,7 @@
 # serverless.component.yml
 
 name: http
-version: 1.0.6
+version: 1.0.8
 author: wwwzbwcom
 org: tencent
 description: Deploys Serverless HTTP Service
