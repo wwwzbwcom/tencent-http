@@ -1,0 +1,23 @@
+org: wwwzbwcom
+app: http-rust-test
+stage: dev
+component: http@dev
+name: http-test
+
+inputs:
+  entryFile: ./main
+  port: 8080
+  src:
+    src: ./
+    exclude:
+      - .env
+      - target
+  region: ap-guangzhou
+  runtime: Nodejs12.16
+  apigatewayConf:
+    protocols:
+      - http
+      - https
+    environment: release
+  functionConf:
+    timeout: 10

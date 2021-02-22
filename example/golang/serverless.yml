@@ -1,5 +1,5 @@
 org: wwwzbwcom
-app: http-test
+app: http-golang-test
 stage: dev
 component: http@dev
 name: http-test

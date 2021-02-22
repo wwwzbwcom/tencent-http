@@ -20,5 +20,5 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World From Golang Example")
+	fmt.Fprintf(w, "Hello World from HTTP Component running Golang Server Example")
 }
