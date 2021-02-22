@@ -15,7 +15,6 @@ func main() {
 	fmt.Printf("Server running at http://127.0.0.1:%s/\n", port)
 	err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil)
 	if err != nil {
-		fmt.Errorf("%v", err)
 	}
 	fmt.Printf("Server Exit")
 }
