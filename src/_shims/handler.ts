@@ -4,7 +4,7 @@ import got from 'got';
 import * as childProcess from 'child_process';
 import { ApigwRequest, event2http } from './event2http';
 import { serializeError } from 'serialize-error';
-import { try2Arr, try2Obj } from 'try2be';
+import { try2Obj } from 'try2be';
 
 let hasInit = false;
 let port: string;
@@ -43,7 +43,7 @@ async function init() {
 
 exports.handler = async (event: ApigwRequest): Promise<ApigwResponse> => {
   const { ret, err } = await try2Obj(async () => {
-    init();
+    await init();
     const httpReq = event2http(event);
     const httpRes = await got(`http://localhost:${port}`, {
       headers: httpReq.headers,
