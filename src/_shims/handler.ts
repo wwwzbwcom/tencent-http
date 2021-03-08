@@ -28,7 +28,7 @@ async function init() {
       p.stdout.pipe(process.stdout);
       p.stderr.pipe(process.stderr);
 
-      const delay = process.env.APP_INIT_DELAY;
+      const delay = process.env.SLS_INIT_DELAY;
       if (delay) {
         await new Promise((resolve) => setTimeout(resolve, parseInt(delay, 10)));
       }
